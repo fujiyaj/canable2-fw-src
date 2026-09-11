@@ -7,7 +7,7 @@
 #include "usb_device.h"
 #include "usbd_cdc_if.h"
 #include "can.h"
-#include "slcan.h"
+#include "atcan.h"
 #include "system.h"
 #include "led.h"
 
@@ -20,13 +20,17 @@ int main(void)
     led_init();
     usb_init();
 
+    // AT-frameプロトコルはホスト側の open/bitrate コマンドが無い専用FWなので、
+    // ここで固定ビットレートでバスを起動する（atcan.c の ATCAN_BITRATE）。
+    atcan_init();
+
     // Power-on blink sequence
     led_blue_blink(2);
 
     // Storage for status and received message buffer
     FDCAN_RxHeaderTypeDef rx_msg_header;
     uint8_t rx_msg_data[64] = {0};
-    uint8_t msg_buf[SLCAN_MTU];
+    uint8_t msg_buf[ATCAN_FRAME_MAX];
 
 
     while(1)
@@ -51,7 +55,7 @@ int main(void)
 			// If message received from bus, parse the frame
 			if (can_rx(&rx_msg_header, rx_msg_data) == HAL_OK)
 			{
-				int32_t msg_len = slcan_parse_frame((uint8_t *)&msg_buf, &rx_msg_header, rx_msg_data);
+				int32_t msg_len = atcan_build_frame((uint8_t *)&msg_buf, &rx_msg_header, rx_msg_data);
 
 				// Transmit message via USB-CDC
 				if(msg_len > 0)
