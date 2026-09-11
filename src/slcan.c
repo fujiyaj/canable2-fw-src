@@ -8,6 +8,7 @@
 #include "error.h"
 #include "slcan.h"
 #include "usbd_cdc_if.h"
+#include "printf.h"
 
 
 // Private variables

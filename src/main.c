@@ -34,6 +34,14 @@ int main(void)
         led_process();
         can_process();
         cdc_process();
+
+        // bus-off ウォッチドッグ（~20ms毎）: 詰まったら FDCAN を自動再初期化
+        static uint32_t last_recover = 0;
+        if ((uint32_t)(HAL_GetTick() - last_recover) >= 20u)
+        {
+            last_recover = HAL_GetTick();
+            can_check_recover();
+        }
         
         
 

@@ -314,6 +314,31 @@ void can_process(void)
 }
 
 
+// Bus-off watchdog. STM32G4 FDCAN sets CCCR.INIT on its own when it goes
+// bus-off and stays stopped until software restarts it -- the stock firmware
+// never does, so a wedge is permanent. Call this periodically from main().
+void can_check_recover(void)
+{
+	if (bus_state != ON_BUS)
+		return;
+
+	FDCAN_ProtocolStatusTypeDef psr;
+	HAL_FDCAN_GetProtocolStatus(&can_handle, &psr);
+
+	if (psr.BusOff)
+	{
+		// Clean stop/start triggers the bus-idle recovery sequence and
+		// resets the error counters. Drop any stale queued TX so we don't
+		// immediately re-error on the same un-ACKed frames.
+		HAL_FDCAN_Stop(&can_handle);
+		HAL_FDCAN_Start(&can_handle);
+		txqueue.head = 0;
+		txqueue.tail = 0;
+		led_green_on();
+	}
+}
+
+
 // Receive message from the CAN bus (blocking)
 uint32_t can_rx(FDCAN_RxHeaderTypeDef *rx_msg_header, uint8_t* rx_msg_data)
 {
