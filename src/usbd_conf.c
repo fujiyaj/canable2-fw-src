@@ -3,6 +3,7 @@
 #include "usbd_def.h"
 #include "usbd_core.h"
 #include "usbd_cdc.h"
+#include "binproto.h"
 
 
 PCD_HandleTypeDef hpcd_USB_FS;
@@ -176,7 +177,7 @@ void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd)
   /* Reset Device. */
   USBD_LL_Reset((USBD_HandleTypeDef*)hpcd->pData);
   /* USER CODE BEGIN HAL_PCD_ResetCallback_PostTreatment */
-  
+  binproto_force_ascii_mode(); // USB bus reset (cable replug/re-enumeration) -- see binproto.h
   /* USER CODE END HAL_PCD_ResetCallback_PostTreatment */
 }
 

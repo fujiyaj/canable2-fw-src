@@ -59,10 +59,17 @@ _Min_Heap_Size = 0x200;      /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
 
 /* Specify the memory areas */
+/* FLASH is 128K total, but the last 2K page (page 63, 0x0801F800-
+ * 0x0801FFFF) is reserved for flash_store.c's config persistence and
+ * deliberately excluded here -- shrinking this region is what makes that
+ * reservation real: the linker itself will refuse to place any code/data
+ * there and will error out (region overflow) if the firmware image ever
+ * grows into it, instead of silently letting flash_store's erase/program
+ * calls clobber code. See src/flash_store.c for the address. */
 MEMORY
 {
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 32K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 128K
+FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 126K
 }
 
 /* Define output sections */
