@@ -486,7 +486,7 @@ param_result_t params_write(reg_id_t id, uint8_t motor_index, const void *in, ui
         bus_flash.host_timeout_ms = v;
         return PARAM_OK;
     }
-    case PARAM_HOST_TIMEOUT_ACTION: return write_u8(&bus_flash.host_timeout_action, in, in_size, HOST_TIMEOUT_HOLD, HOST_TIMEOUT_FAULT);
+    case PARAM_HOST_TIMEOUT_ACTION: return write_u8(&bus_flash.host_timeout_action, in, in_size, HOST_TIMEOUT_HOLD, HOST_TIMEOUT_DISABLE);
     case PARAM_MAX_TEMPERATURE: return write_f32(&mc->max_temperature, in, in_size, 0.0f, 300.0f);
     case PARAM_MIN_BUS_VOLTAGE: return write_f32(&mc->min_bus_voltage, in, in_size, 0.0f, 1000.0f);
     case PARAM_MAX_BUS_VOLTAGE: return write_f32(&mc->max_bus_voltage, in, in_size, 0.0f, 1000.0f);

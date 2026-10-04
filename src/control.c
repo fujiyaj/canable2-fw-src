@@ -808,19 +808,30 @@ void control_step(uint8_t motor_index, float dt, uint32_t now_ms)
         return;
     }
 
-    // Gate on THIS MOTOR'S OWN fault_latched -- not st->state == STATE_FAULT
-    // -- so that "stuck until acknowledged" applies only to a motor that
-    // actually had its own cause (fault_latched only ever gets set from
-    // THIS motor's own conditions, see update_faults()). A pure bystander
-    // (interlocked only by another motor's system fault, own fault_latched
-    // always 0x0) falls straight through here the instant `interlocked`
-    // above goes false -- i.e. it resumes automatically once the causing
+    // Gate on THIS MOTOR'S OWN latched runtime-fatal bits -- not
+    // st->state == STATE_FAULT -- so that "stuck until acknowledged"
+    // applies only to a motor that actually had its own runtime-fatal
+    // cause (fault_latched only ever gets set from THIS motor's own
+    // conditions, see update_faults()). A pure bystander (interlocked
+    // only by another motor's system fault, own fault_latched always
+    // 0x0) falls straight through here the instant `interlocked` above
+    // goes false -- i.e. it resumes automatically once the causing
     // motor's condition clears, WITHOUT needing its own PARAM_CLEAR_FAULT
     // call, matching "clear_fault on the causing motor alone is enough."
     // Using st->state here instead would incorrectly leave every bystander
     // latched in FAULT forever, since nothing else ever resets state back
     // out of STATE_FAULT for a motor that never got its own clear_fault.
-    if (st->fault_latched != 0) {
+    //
+    // FAULT_BIT_CONFIG_ERROR is deliberately EXCLUDED from this check: per
+    // its own contract in params.h ("enable-reject ONLY ... NEVER forces
+    // RUNNING -> FAULT ... state stays IDLE"), a rejected PARAM_ENABLE=1
+    // (e.g. current_limit still 0) latches that bit for visibility but
+    // must never, by itself, flip this motor into STATE_FAULT -- doing so
+    // would wedge every future enable attempt behind PARAM_ERR_STATE
+    // ("must clear_fault first") for a motor that was simply never armed.
+    // Masking it out here is what makes that contract hold even with the
+    // fault_latched-based gating above.
+    if ((st->fault_latched & ~(uint32_t)FAULT_BIT_CONFIG_ERROR) != 0) {
         c->output_current = 0.0f;
         st->state = STATE_FAULT; // still displayed FAULT while awaiting this motor's own clear_fault
         st->effective_current_cmd = 0.0f;
@@ -840,12 +851,30 @@ void control_step(uint8_t motor_index, float dt, uint32_t now_ms)
     st->state = STATE_RUNNING;
 
     // host/command timeout policy (HOLD substitutes safe effective
-    // targets; CURRENT_ZERO bypasses the cascade outright; FAULT already
-    // handled above via update_faults()/FAULT_BIT_COMMAND_TIMEOUT).
+    // targets; CURRENT_ZERO bypasses the cascade outright; DISABLE also
+    // clears `enable` itself; FAULT already handled above via
+    // update_faults()/FAULT_BIT_COMMAND_TIMEOUT).
     float eff_target_velocity = pr->target_velocity;
     float eff_target_current  = pr->target_current;
 
     if (c->host_timeout_active) {
+        if (bus->host_timeout_action == HOST_TIMEOUT_DISABLE) {
+            // Unlike CURRENT_ZERO below, this clears `enable` itself, not
+            // just the live output -- see host_timeout_action_t's comment:
+            // a comms blip must never silently self-heal into motion the
+            // instant CONTROL_COMMAND resumes. Self-sustaining from here:
+            // next tick's `if (!pr->enable)` branch above takes over and
+            // keeps reporting IDLE/NONE/0 even after host_timeout_active
+            // itself clears, until an explicit PARAM_ENABLE=1.
+            pr->enable = 0;
+            c->active_source = c->last_requested_source = CONTROL_SOURCE_NONE;
+            c->transitioning = false;
+            st->active_source = CONTROL_SOURCE_NONE;
+            st->state = STATE_IDLE;
+            c->output_current = 0.0f;
+            st->effective_current_cmd = 0.0f;
+            return;
+        }
         if (bus->host_timeout_action == HOST_TIMEOUT_CURRENT_ZERO) {
             c->active_source = c->last_requested_source = CONTROL_SOURCE_NONE;
             c->transitioning = false;

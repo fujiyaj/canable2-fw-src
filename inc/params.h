@@ -434,6 +434,15 @@ typedef enum
     HOST_TIMEOUT_HOLD         = 0, // keep last accepted target (position hold friendly)
     HOST_TIMEOUT_CURRENT_ZERO = 1, // drop to target_current = 0 but stay enabled
     HOST_TIMEOUT_FAULT        = 2, // -> FAULT, current = 0
+    HOST_TIMEOUT_DISABLE      = 3, // -> enable=0, state=IDLE, current = 0. Unlike
+                                    // CURRENT_ZERO, this clears `enable` itself (not
+                                    // just the live output), so a comms blip can never
+                                    // silently self-heal into motion the instant
+                                    // CONTROL_COMMAND resumes -- PARAM_ENABLE=1 is
+                                    // required again afterward. Self-sustaining: once
+                                    // set, control_step()'s `!pr->enable` branch keeps
+                                    // reporting IDLE/NONE/0 on every subsequent tick
+                                    // even after host_timeout_active itself clears.
 } host_timeout_action_t;
 
 typedef enum

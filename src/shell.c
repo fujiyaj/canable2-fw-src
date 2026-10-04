@@ -112,7 +112,7 @@ static const field_t FIELDS[] =
     {"position_max",             PARAM_POSITION_MAX,            T_F32},
     {"can_timeout_ms",           PARAM_CAN_TIMEOUT_MS,          T_U16},
     {"host_timeout_ms",          PARAM_HOST_TIMEOUT_MS,         T_U16}, // SYSTEM -- see param_scope()
-    {"host_timeout_action",      PARAM_HOST_TIMEOUT_ACTION,     T_U8},  // SYSTEM -- 0 HOLD / 1 CURRENT_ZERO / 2 FAULT, raw numeric (v0.1)
+    {"host_timeout_action",      PARAM_HOST_TIMEOUT_ACTION,     T_U8},  // SYSTEM -- 0 HOLD / 1 CURRENT_ZERO / 2 FAULT / 3 DISABLE, raw numeric (v0.1)
     {"max_temperature",          PARAM_MAX_TEMPERATURE,         T_F32},
     {"min_bus_voltage",          PARAM_MIN_BUS_VOLTAGE,         T_F32},
     {"max_bus_voltage",          PARAM_MAX_BUS_VOLTAGE,         T_F32},
