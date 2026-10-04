@@ -1,6 +1,7 @@
 # CANable 2.0 Firmware
 
 This repository contains sources for the slcan CANable 2.0 firmware. This firmware implements non-standard slcan commands to support CANFD messaging alongside a LAWICEL-style command set.
+https://www.amazon.co.jp/dp/B0CYQXVGFJ?ref=ppx_yo2ov_dt_b_fed_asin_title
 
 ## Supported Commands
 
