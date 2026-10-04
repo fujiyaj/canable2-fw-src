@@ -1,3 +1,13 @@
+# CANable 2.0 Firmware (personal fork, modified)
+
+**This is a personal, modified fork of [normaldotcom/canable2-fw](https://github.com/normaldotcom/canable2-fw), licensed under GPLv3 (see `LICENSE.md`; the HAL/USB library/printf components keep their own original licenses, also in `LICENSE.md`, unchanged).**
+
+Modifications started 2026-10 on the `atcan-firmware` branch, replacing the slcan/CANFD USB-CAN-adapter firmware described below with a custom 4-motor VESC motion-controller firmware (independent position/velocity/current cascade per motor, trapezoidal profile, a custom binary protocol `binproto v2` over USB CDC, host/command watchdogs, fault handling, flash-persisted parameters). See `docs/design_summary.md` for the current design, `docs/test_status.md` for what has been verified on real hardware, and `docs/open_issues.md` for known gaps. This `master` branch is unmodified upstream history; `atcan-firmware` is the modified branch actually in use.
+
+The original upstream README follows, describing the unmodified slcan/CANFD firmware (not what runs on `atcan-firmware`):
+
+---
+
 # CANable 2.0 Firmware
 
 This repository contains sources for the slcan CANable 2.0 firmware. This firmware implements non-standard slcan commands to support CANFD messaging alongside a LAWICEL-style command set.
